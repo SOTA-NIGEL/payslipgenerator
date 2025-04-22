@@ -10,19 +10,18 @@ import smtplib
 from fpdf import FPDF  # Library to generate PDF
 
 # Define the employee data
-data = {
-    "Employee ID": ["E001", "E002", "E003", "E004"],
-    "Name": ["Nicole Zonke", "Precious Tendayi", "Michael Dendera", "Millicent Gumbira"],
-    "Email": ["nicolezonke393@gmail.com", "precioustendayi36@gmail.com", "denderemichael@gmail.com", "millicentlisy@gmail.com"],
-    "Basic Salary": [1200, 1500, 1800, 1700],
-    "Allowances": [300, 400, 500, 400],
-    "Taxi Deduction": [50, 60, 70, 40],
-    "NSSA Deduction": [30, 40, 50, 60]
-}
 
+df = pd.read_excel("employee.xlsx")  # Load employee data from an Excel file
 # Create a DataFrame
-df = pd.DataFrame(data)
-
+df = pd.DataFrame
+try:
+    df = pd.read_excel("employee.xlsx")
+except FileNotFoundError:
+    print("Error: The file 'employee.xlsx' was not found.")
+    exit()
+except Exception as e:
+    print(f"An error occurred while reading the Excel file: {e}")
+    exit()
 # Define the email sender credentials
 USERNAME = "admin"  # Replace with the actual admin username
 PASSWORD_HASH = hashlib.sha256("admin_password".encode()).hexdigest()  # Replace with the hashed admin password
@@ -36,8 +35,16 @@ def authenticate_user() -> bool:
         return True
     logging.warning("Authentication failed.")
     return False
-sender_email = "sirspotsotar@gmail.com"
-sender_password = "cmvv dygo akcu njug"  # Use an App Password for Gmail
+
+# Prompt the user for the sender's email and password
+sender_email = input("Enter sender email address: ")
+while True:
+    sender_password = getpass.getpass("Enter sender email password: ")  # Use an App Password for Gmail
+    confirm_password = getpass.getpass("Confirm sender email password: ")
+    if sender_password == confirm_password:
+        break
+    else:
+        print("Passwords do not match. Please try again.")
 
 # Loop through each employee and send an email
 for index, row in df.iterrows():
@@ -46,11 +53,11 @@ for index, row in df.iterrows():
     email = row['Email']
     basic_salary = row['Basic Salary']
     allowances = row['Allowances']
-    taxi_deduction = row['Taxi Deduction']
+    tax_deduction = row['Tax Deduction']
     nssa_deduction = row['NSSA Deduction']
 
     # Calculate net salary
-    net_salary = basic_salary + allowances - taxi_deduction - nssa_deduction
+    net_salary = basic_salary + allowances - tax_deduction - nssa_deduction
 
     # Generate a PDF for the payslip
     pdf = FPDF()
@@ -63,7 +70,7 @@ for index, row in df.iterrows():
     pdf.cell(200, 10, txt=f"Email: {email}", ln=True)
     pdf.cell(200, 10, txt=f"Basic Salary: {basic_salary}", ln=True)
     pdf.cell(200, 10, txt=f"Allowances: {allowances}", ln=True)
-    pdf.cell(200, 10, txt=f"Taxi Deduction: {taxi_deduction}", ln=True)
+    pdf.cell(200, 10, txt=f"Tax Deduction: {tax_deduction}", ln=True)
     pdf.cell(200, 10, txt=f"NSSA Deduction: {nssa_deduction}", ln=True)
     pdf.cell(200, 10, txt=f"Net Salary: {net_salary}", ln=True)
 
@@ -84,7 +91,7 @@ for index, row in df.iterrows():
     Please find attached your payslip for this month.
 
     Best regards,
-    GOLDEN STAR INNOVATIONS
+    SOTA NIGEL INNOVATIONS
     """
     msg.attach(MIMEText(body, 'plain'))
 
